@@ -10,7 +10,7 @@ import { CreateDocumentDto } from './dto/create-document.dto';
 import { Express } from 'express';
 import * as path from 'path';
 import * as fs from 'fs';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto'; // ✅ Node built-in — no ESM issues
 
 const ALLOWED_MIME_TYPES: AllowedMimeType[] = [
   'application/pdf',
@@ -27,7 +27,6 @@ export class DocumentService {
     @InjectModel(CustomerDocument.name)
     private readonly documentModel: Model<DocumentRecord>,
   ) {
-    // Ensure upload directory exists
     if (!fs.existsSync(UPLOAD_DIR)) {
       fs.mkdirSync(UPLOAD_DIR, { recursive: true });
     }
@@ -37,24 +36,20 @@ export class DocumentService {
     file: Express.Multer.File,
     createDocumentDto: CreateDocumentDto,
   ): Promise<CustomerDocument> {
-    // Validate MIME type
     if (!ALLOWED_MIME_TYPES.includes(file.mimetype as AllowedMimeType)) {
       throw new BadRequestException(
         'Invalid file type. Only PDF, DOCX, and XLSX are allowed.',
       );
     }
 
-    // Validate file size
     if (file.size > MAX_FILE_SIZE_BYTES) {
       throw new BadRequestException('File size exceeds the 50MB limit.');
     }
 
-    // Generate unique stored filename
     const ext = path.extname(file.originalname);
-    const storedName = `${uuidv4()}${ext}`;
+    const storedName = `${randomUUID()}${ext}`; // ✅ replaces uuidv4()
     const storagePath = path.join(UPLOAD_DIR, storedName);
 
-    // Write file to disk
     fs.writeFileSync(storagePath, file.buffer);
 
     const doc = new this.documentModel({

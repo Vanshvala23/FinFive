@@ -9,8 +9,9 @@ import { CustomerDocument, DocumentRecord, AllowedMimeType } from './schemas/doc
 import { CreateDocumentDto } from './dto/create-document.dto';
 import { Express } from 'express';
 import * as path from 'path';
-import * as fs from 'fs';
-import { randomUUID } from 'crypto'; // ✅ Node built-in — no ESM issues
+import { randomUUID } from 'crypto';
+import { v2 as cloudinary } from 'cloudinary';
+import { Readable } from 'stream';
 
 const ALLOWED_MIME_TYPES: AllowedMimeType[] = [
   'application/pdf',
@@ -19,17 +20,46 @@ const ALLOWED_MIME_TYPES: AllowedMimeType[] = [
 ];
 
 const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024; // 50MB
-const UPLOAD_DIR = path.join(process.cwd(), 'uploads', 'documents');
+
+// Cloudinary is configured once at module load from env vars
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 @Injectable()
 export class DocumentService {
   constructor(
     @InjectModel(CustomerDocument.name)
     private readonly documentModel: Model<DocumentRecord>,
-  ) {
-    if (!fs.existsSync(UPLOAD_DIR)) {
-      fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-    }
+  ) {}
+
+  // Upload buffer to Cloudinary and return the secure URL
+  private uploadToCloudinary(
+    buffer: Buffer,
+    storedName: string,
+    mimeType: string,
+  ): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          public_id: `documents/${storedName}`,
+          resource_type: 'raw', // required for PDF/DOCX/XLSX
+          format: mimeType.split('/')[1],
+        },
+        (error, result) => {
+          if (error || !result) return reject(error);
+          resolve(result.secure_url);
+        },
+      );
+
+      // Pipe buffer into Cloudinary upload stream
+      const readable = new Readable();
+      readable.push(buffer);
+      readable.push(null);
+      readable.pipe(uploadStream);
+    });
   }
 
   async upload(
@@ -47,10 +77,14 @@ export class DocumentService {
     }
 
     const ext = path.extname(file.originalname);
-    const storedName = `${randomUUID()}${ext}`; // ✅ replaces uuidv4()
-    const storagePath = path.join(UPLOAD_DIR, storedName);
+    const storedName = `${randomUUID()}${ext}`;
 
-    fs.writeFileSync(storagePath, file.buffer);
+    // Upload to Cloudinary — returns a persistent HTTPS URL
+    const storageUrl = await this.uploadToCloudinary(
+      file.buffer,
+      storedName,
+      file.mimetype,
+    );
 
     const doc = new this.documentModel({
       customerId: createDocumentDto.customerId,
@@ -58,7 +92,7 @@ export class DocumentService {
       storedName,
       mimeType: file.mimetype,
       size: file.size,
-      storagePath,
+      storagePath: storageUrl, // now a URL, not a local path
     });
 
     return doc.save();
@@ -85,14 +119,20 @@ export class DocumentService {
     if (!doc) {
       throw new NotFoundException(`Document with ID ${id} not found.`);
     }
+
+    // Also delete from Cloudinary
+    const publicId = `documents/${doc.storedName.replace(/\.[^/.]+$/, '')}`;
+    await cloudinary.uploader.destroy(publicId, { resource_type: 'raw' });
+
     doc.isDeleted = true;
     await doc.save();
   }
 
-  getFileStream(storagePath: string): fs.ReadStream {
-    if (!fs.existsSync(storagePath)) {
-      throw new NotFoundException('File not found on storage.');
+  // storagePath is now a Cloudinary URL — return it directly for redirect
+  getDownloadUrl(storagePath: string): string {
+    if (!storagePath) {
+      throw new NotFoundException('File URL not found.');
     }
-    return fs.createReadStream(storagePath);
+    return storagePath;
   }
 }

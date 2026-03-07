@@ -17,11 +17,10 @@ import { memoryStorage } from 'multer';
 import type { Response } from 'express';
 import { DocumentService } from './document.service';
 import { CreateDocumentDto } from './dto/create-document.dto';
-import * as path from 'path';
 
 const MULTER_OPTIONS = {
   storage: memoryStorage(),
-  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB guard at transport layer
+  limits: { fileSize: 50 * 1024 * 1024 },
 };
 
 @Controller('documents')
@@ -54,14 +53,12 @@ export class DocumentController {
     return this.documentService.findOne(id);
   }
 
-  // GET /documents/:id/download
+  // GET /documents/:id/download  →  redirects to Cloudinary URL
   @Get(':id/download')
   async download(@Param('id') id: string, @Res() res: Response) {
     const doc = await this.documentService.findOne(id);
-    const stream = this.documentService.getFileStream(doc.storagePath);
-    res.setHeader('Content-Disposition', `attachment; filename="${doc.originalName}"`);
-    res.setHeader('Content-Type', doc.mimeType);
-    stream.pipe(res);
+    const url = this.documentService.getDownloadUrl(doc.storagePath);
+    return res.redirect(url);
   }
 
   // DELETE /documents/:id

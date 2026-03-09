@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { ContactsModule } from './contacts/contacts.module';
 import { CustomerModule } from './customer/customer.module';
 import { DocumentModule } from './document/document.module';
+import { ApplicationsModule } from './applications/applications.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { DocumentModule } from './document/document.module';
     ContactsModule,
     CustomerModule,
     DocumentModule,
+    ApplicationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

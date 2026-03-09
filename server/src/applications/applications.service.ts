@@ -36,15 +36,15 @@ export class ApplicationsService {
   private uploadToCloudinary(
     buffer: Buffer,
     storedName: string,
-    mimeType: string,
   ): Promise<string> {
+
     return new Promise((resolve, reject) => {
 
       const uploadStream = cloudinary.uploader.upload_stream(
         {
-          public_id: `applications/${storedName}`,
+          folder: 'applications',
+          public_id: storedName,
           resource_type: 'raw',
-          format: mimeType.split('/')[1],
         },
         (error, result) => {
           if (error || !result) {
@@ -89,7 +89,6 @@ export class ApplicationsService {
     const resumeUrl = await this.uploadToCloudinary(
       file.buffer,
       storedName,
-      file.mimetype,
     );
 
     const application = new this.applicationModel({

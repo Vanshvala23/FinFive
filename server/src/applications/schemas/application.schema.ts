@@ -12,7 +12,7 @@ export class Application {
   @Prop({ required: true })
   lastName: string;
 
-  @Prop({ required: true, unique: false })
+  @Prop({ required: true })
   email: string;
 
   @Prop({ required: true })
@@ -36,8 +36,25 @@ export class Application {
   @Prop({ required: true })
   country: string;
 
+  // Cloudinary resume URL
   @Prop({ required: true })
-  resume: string; // file path
+  resumeUrl: string;
+
+  // Stored filename
+  @Prop()
+  storedName: string;
+
+  // Original filename
+  @Prop()
+  originalName: string;
+
+  // File type
+  @Prop()
+  mimeType: string;
+
+  // File size
+  @Prop()
+  size: number;
 
 }
 

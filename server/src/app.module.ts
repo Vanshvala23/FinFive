@@ -9,6 +9,7 @@ import { ContactsModule } from './contacts/contacts.module';
 import { CustomerModule } from './customer/customer.module';
 import { DocumentModule } from './document/document.module';
 import { ApplicationsModule } from './applications/applications.module';
+import { LeadsModule } from './leads/leads.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { ApplicationsModule } from './applications/applications.module';
     CustomerModule,
     DocumentModule,
     ApplicationsModule,
+    LeadsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

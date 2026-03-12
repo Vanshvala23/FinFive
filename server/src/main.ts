@@ -31,35 +31,44 @@ async function bootstrap() {
 
   // Swagger UI
   SwaggerModule.setup('api/docs', app, document, {
-    customSiteTitle: 'FinFive API Docs',
+  customSiteTitle: 'FinFive API Docs',
 
-    customCss: `
-      body { background-color: #0f172a; }
+  customCss: `
+    body {
+      background-color: #0f172a;
+    }
 
-      .swagger-ui .topbar {
-        background-color: #020617;
-      }
+    .swagger-ui .topbar {
+      background-color: #020617;
+      border-bottom: 1px solid #1e293b;
+    }
 
-      .swagger-ui .opblock {
-        border-radius: 12px;
-        border: 1px solid #1e293b;
-      }
+    .swagger-ui .info .title {
+      color: #38bdf8;
+      font-size: 30px;
+      font-weight: 700;
+    }
 
-      .swagger-ui .info .title {
-        color: #38bdf8;
-        font-size: 30px;
-        font-weight: 700;
-      }
-    `,
+    .swagger-ui .opblock {
+      border-radius: 12px;
+      border: 1px solid #1e293b;
+      margin-bottom: 10px;
+    }
 
-    swaggerOptions: {
-      persistAuthorization: true,
-      docExpansion: 'list',
-      filter: true,
-      displayRequestDuration: true,
-      tryItOutEnabled: true,
-    },
-  });
+    .swagger-ui .btn.execute {
+      background-color: #38bdf8;
+      border-color: #38bdf8;
+    }
+  `,
+
+  swaggerOptions: {
+    persistAuthorization: true,
+    docExpansion: 'list',
+    filter: true,
+    displayRequestDuration: true,
+    tryItOutEnabled: true,
+  },
+});
 
   // Redoc Modern Docs
   app.use(

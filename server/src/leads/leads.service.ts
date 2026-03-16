@@ -8,8 +8,8 @@ import { CreateLeadDto } from './dto/create-lead.dto';
 export class LeadsService {
   constructor(@InjectModel(Lead.name) private model: Model<LeadDocument>) {}
 
-  create(dto: CreateLeadDto, userId: string) {
-    return this.model.create({ ...dto, assignedTo: userId });
+  create(dto: CreateLeadDto, userId: string | null) {
+    return this.model.create({ ...dto, ...(userId && { assignedTo: userId }) });
   }
 
   findAll(query: any = {}) {

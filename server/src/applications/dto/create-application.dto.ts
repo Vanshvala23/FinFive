@@ -1,34 +1,53 @@
-import { IsEmail, IsNotEmpty, IsOptional } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateApplicationDto {
-
+  @ApiProperty({ example: 'Jane' })
   @IsNotEmpty()
-  firstName: string;
+  @IsString()
+  firstName!: string;
 
+  @ApiProperty({ example: 'Doe' })
   @IsNotEmpty()
-  lastName: string;
+  @IsString()
+  lastName!: string;
 
+  @ApiProperty({ example: 'jane.doe@email.com' })
   @IsEmail()
-  email: string;
+  email!: string;
 
+  @ApiProperty({ example: '+91 98765 43210' })
   @IsNotEmpty()
-  phoneNumber: string;
+  @IsString()
+  phoneNumber!: string;
 
+  @ApiProperty({ example: 'Bachelor of Commerce' })
   @IsNotEmpty()
-  highestEducationQualification: string;
+  @IsString()
+  highestEducationQualification!: string;
 
+  @ApiPropertyOptional({ example: '42 MG Road' })
   @IsOptional()
-  streetAddress: string;
+  @IsString()
+  streetAddress?: string;
 
+  @ApiProperty({ example: 'Mumbai' })
   @IsNotEmpty()
-  city: string;
+  @IsString()
+  city!: string;
 
+  @ApiPropertyOptional({ example: 'Maharashtra' })
   @IsOptional()
-  state: string;
+  @IsString()
+  state?: string;
 
+  @ApiPropertyOptional({ example: '400001' })
   @IsOptional()
-  zipCode: string;
+  @IsString()
+  zipCode?: string;
 
+  @ApiProperty({ example: 'India' })
   @IsNotEmpty()
-  country: string;
+  @IsString()
+  country!: string;
 }

@@ -12,25 +12,25 @@ export type AllowedMimeType =
 @Schema({ timestamps: true })
 export class CustomerDocument {
   @Prop({ required: true, type: mongoose.Schema.Types.ObjectId, ref: 'Customer' })
-  customerId: mongoose.Types.ObjectId;
+  customerId!: mongoose.Types.ObjectId;
 
   @Prop({ required: true, trim: true })
-  originalName: string;
+  originalName!: string;
 
   @Prop({ required: true, trim: true })
-  storedName: string;
+  storedName!: string;
 
   @Prop({ required: true })
-  mimeType: AllowedMimeType;
+  mimeType!: AllowedMimeType;
 
   @Prop({ required: true, type: Number })
-  size: number; // in bytes
+  size!: number; // in bytes
 
   @Prop({ required: true, trim: true })
-  storagePath: string;
+  storagePath!: string;
 
   @Prop({ default: false })
-  isDeleted: boolean;
+  isDeleted!: boolean;
 }
 
 export const CustomerDocumentSchema = SchemaFactory.createForClass(CustomerDocument);

@@ -6,13 +6,13 @@ export type CustomerDocument = Customer & Document;
 @Schema({ timestamps: true })
 export class Customer {
   @Prop({ required: true, trim: true })
-  corporateEntityName: string;
+  corporateEntityName!: string;
 
   @Prop({ required: true, trim: true })
-  keyContactPerson: string;
+  keyContactPerson!: string;
 
   @Prop({ required: true, type: Number, min: 0 })
-  initialAUM: number;
+  initialAUM!: number;
 }
 
 export const CustomerSchema = SchemaFactory.createForClass(Customer);

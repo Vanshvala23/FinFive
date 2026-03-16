@@ -7,54 +7,54 @@ export type ApplicationDocument = Application & Document;
 export class Application {
 
   @Prop({ required: true })
-  firstName: string;
+  firstName!: string;
 
   @Prop({ required: true })
-  lastName: string;
+  lastName!: string;
 
   @Prop({ required: true })
-  email: string;
+  email!: string;
 
   @Prop({ required: true })
-  phoneNumber: string;
+  phoneNumber!: string;
 
   @Prop({ required: true })
-  highestEducationQualification: string;
+  highestEducationQualification!: string;
 
   @Prop()
-  streetAddress: string;
+  streetAddress!: string;
 
   @Prop({ required: true })
-  city: string;
+  city!: string;
 
   @Prop()
-  state: string;
+  state!: string;
 
   @Prop()
-  zipCode: string;
+  zipCode!: string;
 
   @Prop({ required: true })
-  country: string;
+  country!: string;
 
   // Cloudinary resume URL
   @Prop({ required: true })
-  resumeUrl: string;
+  resumeUrl!: string;
 
   // Stored filename
   @Prop()
-  storedName: string;
+  storedName!: string;
 
   // Original filename
   @Prop()
-  originalName: string;
+  originalName!: string;
 
   // File type
   @Prop()
-  mimeType: string;
+  mimeType!: string;
 
   // File size
   @Prop()
-  size: number;
+  size!: number;
 
 }
 

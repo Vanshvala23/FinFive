@@ -5,17 +5,17 @@ export type ContactDocument = Contact & Document;
 @Schema()
 export class Contact {
     @Prop({required:true})
-    name:string;
+    name!:string;
     @Prop({required:true})
-    email:string;
+    email!:string;
     @Prop({required:true})
-    phone:string;
+    phone!:string;
     @Prop({required:true})
-    company:string;
+    company!:string;
     @Prop({required:true})
     //frontend has drop down for services
-    service:string;
+    service!:string;
     @Prop({required:true})
-    message:string;
+    message!:string;
 }
 export const ContactSchema = SchemaFactory.createForClass(Contact);

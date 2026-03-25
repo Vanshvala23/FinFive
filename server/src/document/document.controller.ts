@@ -85,16 +85,17 @@ export class DocumentController {
     return this.documentService.findAllByCustomer(customerId);
   }
 
-  // GET /documents/:id/download  — must come before /:id to avoid route collision
+  // GET /documents/:id/download
   @Get(':id/download')
-  @ApiOperation({ summary: 'Redirect to Cloudinary download URL' })
+  @ApiOperation({ summary: 'Get Cloudinary download URL' })
   @ApiParam({ name: 'id', description: 'MongoDB ObjectId of the document' })
-  @ApiResponse({ status: 302, description: 'Redirects to the file URL.' })
+  @ApiResponse({ status: 200, description: 'Returns the file URL.' })
   @ApiResponse({ status: 404, description: 'Document not found.' })
   async download(@Param('id') id: string, @Res() res: Response) {
     const doc = await this.documentService.findOne(id);
     const url = this.documentService.getDownloadUrl(doc.storagePath);
-    return res.redirect(url);
+    // Return the URL as a JSON object instead of redirecting!
+    return res.status(200).json({ url: url }); 
   }
 
   // GET /documents/:id

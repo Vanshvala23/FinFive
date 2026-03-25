@@ -7,7 +7,18 @@ import redoc from 'redoc-express';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  app.enableCors();
+  app.enableCors({
+    origin: [
+      'http://localhost:3000',
+      'http://localhost:5173', // Vite dev server
+      'http://localhost:4200', // Angular dev server
+      'https://fin-5ive.netlify.app', // e.g. https://yourapp.vercel.app
+    ].filter(Boolean), // removes undefined if env var not set
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+    credentials: true,
+  });
+
 
   const port = process.env.PORT || 3000;
 

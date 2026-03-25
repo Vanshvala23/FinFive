@@ -38,7 +38,7 @@ export class DocumentService {
     private readonly documentModel: Model<DocumentRecord>,
   ) {}
 
-  // ✅ FIXED UPLOAD
+  // ✅ FIXED CLOUDINARY UPLOAD
   private uploadToCloudinary(
     buffer: Buffer,
     storedName: string,
@@ -47,8 +47,7 @@ export class DocumentService {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
           public_id: `documents/${storedName}`,
-          resource_type: 'raw', // ✅ correct for PDFs & docs
-          // ❌ REMOVED format (was causing issues)
+          resource_type: 'raw', // ✅ correct
         },
         (error, result) => {
           if (error || !result) return reject(error);
@@ -115,18 +114,14 @@ export class DocumentService {
       .findOne({ _id: id, isDeleted: false })
       .exec();
 
-    if (!doc) {
-      throw new NotFoundException(`Document not found`);
-    }
-
+    if (!doc) throw new NotFoundException('Document not found');
     return doc;
   }
 
   async softDelete(id: string): Promise<void> {
     const doc = await this.documentModel.findById(id).exec();
-    if (!doc) throw new NotFoundException(`Document not found`);
+    if (!doc) throw new NotFoundException('Document not found');
 
-    // remove extension
     const publicId = `documents/${doc.storedName.replace(/\.[^/.]+$/, '')}`;
 
     await cloudinary.uploader.destroy(publicId, {
@@ -137,13 +132,11 @@ export class DocumentService {
     await doc.save();
   }
 
-  // ✅ SAFE URL RETURN
+  // ✅ SAFE URL (always https)
   getDownloadUrl(storagePath: string): string {
     if (!storagePath) {
       throw new NotFoundException('File URL missing');
     }
-
-    // always ensure https
     return storagePath.replace('http://', 'https://');
   }
 }

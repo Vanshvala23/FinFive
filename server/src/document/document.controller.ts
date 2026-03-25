@@ -41,80 +41,65 @@ const MULTER_OPTIONS = {
 export class DocumentController {
   constructor(private readonly documentService: DocumentService) {}
 
-  // POST /documents/upload
+  // ✅ UPLOAD
   @Post('upload')
   @HttpCode(HttpStatus.CREATED)
   @UseInterceptors(FileInterceptor('file', MULTER_OPTIONS))
-  @ApiOperation({ summary: 'Upload a document to the vault' })
+  @ApiOperation({ summary: 'Upload document' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
       type: 'object',
       properties: {
-        file:         { type: 'string', format: 'binary' },
-        customerId:   { type: 'string', example: '664f1b2c8e4a2b001e3d9a11' },
-        originalName: { type: 'string', example: 'Q3_Report.pdf' },
+        file: { type: 'string', format: 'binary' },
+        customerId: { type: 'string' },
       },
       required: ['file', 'customerId'],
     },
   })
-  @ApiResponse({ status: 201, description: 'Document uploaded.' })
-  @ApiResponse({ status: 400, description: 'Invalid file or missing fields.' })
   async upload(
     @UploadedFile() file: Express.Multer.File,
     @Body() createDocumentDto: CreateDocumentDto,
   ) {
-    if (!file) throw new BadRequestException('No file provided.');
+    if (!file) throw new BadRequestException('No file uploaded');
     return this.documentService.upload(file, createDocumentDto);
   }
 
-  // GET /documents  ← was missing; admin dashboard calls this
+  // ✅ GET ALL
   @Get()
-  @ApiOperation({ summary: 'Get all documents (admin vault view)' })
-  @ApiResponse({ status: 200, description: 'Returns all non-deleted documents.' })
   findAll() {
     return this.documentService.findAll();
   }
 
-  // GET /documents/customer/:customerId
+  // ✅ GET BY CUSTOMER
   @Get('customer/:customerId')
-  @ApiOperation({ summary: 'Get all documents for a specific customer' })
-  @ApiParam({ name: 'customerId', description: 'MongoDB ObjectId of the customer' })
-  @ApiResponse({ status: 200, description: 'Returns documents for the customer.' })
   findAllByCustomer(@Param('customerId') customerId: string) {
     return this.documentService.findAllByCustomer(customerId);
   }
 
-  // GET /documents/:id/download
+  // 🔥🔥🔥 FIXED DOWNLOAD (CRITICAL)
   @Get(':id/download')
-  @ApiOperation({ summary: 'Get Cloudinary download URL' })
-  @ApiParam({ name: 'id', description: 'MongoDB ObjectId of the document' })
-  @ApiResponse({ status: 200, description: 'Returns the file URL.' })
-  @ApiResponse({ status: 404, description: 'Document not found.' })
-  async download(@Param('id') id: string, @Res() res: Response) {
+  async download(
+    @Param('id') id: string,
+    @Res() res: Response,
+  ) {
     const doc = await this.documentService.findOne(id);
-    const url = this.documentService.getDownloadUrl(doc.storagePath);
-    // Return the URL as a JSON object instead of redirecting!
-    return res.status(200).json({ url: url }); 
+
+    // ✅ Force download
+    const downloadUrl = `${doc.storagePath}?fl_attachment=true`;
+
+    return res.redirect(downloadUrl);
   }
 
-  // GET /documents/:id
+  // ✅ GET ONE
   @Get(':id')
-  @ApiOperation({ summary: 'Get a single document by ID' })
-  @ApiParam({ name: 'id', description: 'MongoDB ObjectId of the document' })
-  @ApiResponse({ status: 200, description: 'Returns the document record.' })
-  @ApiResponse({ status: 404, description: 'Document not found.' })
   findOne(@Param('id') id: string) {
     return this.documentService.findOne(id);
   }
 
-  // DELETE /documents/:id
+  // ✅ DELETE
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Soft-delete a document and remove from Cloudinary' })
-  @ApiParam({ name: 'id', description: 'MongoDB ObjectId of the document' })
-  @ApiResponse({ status: 204, description: 'Document deleted.' })
-  @ApiResponse({ status: 404, description: 'Document not found.' })
   softDelete(@Param('id') id: string) {
     return this.documentService.softDelete(id);
   }

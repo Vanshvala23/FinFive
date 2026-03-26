@@ -40,27 +40,27 @@ export class DocumentService {
 
   // ✅ FIXED CLOUDINARY UPLOAD
   private uploadToCloudinary(
-    buffer: Buffer,
-    storedName: string,
-  ): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const uploadStream = cloudinary.uploader.upload_stream(
-        {
-          public_id: `documents/${storedName}`,
-          resource_type: 'raw', // ✅ correct
-        },
-        (error, result) => {
-          if (error || !result) return reject(error);
-          resolve(result.secure_url); // always https
-        },
-      );
+  buffer: Buffer,
+  fileId: string,
+): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        public_id: `documents/${fileId}`, // ✅ NO extension
+        resource_type: 'raw',
+      },
+      (error, result) => {
+        if (error || !result) return reject(error);
+        resolve(result.secure_url);
+      },
+    );
 
-      const readable = new Readable();
-      readable.push(buffer);
-      readable.push(null);
-      readable.pipe(uploadStream);
-    });
-  }
+    const readable = new Readable();
+    readable.push(buffer);
+    readable.push(null);
+    readable.pipe(uploadStream);
+  });
+}
 
   async upload(
     file: Express.Multer.File,
@@ -76,13 +76,14 @@ export class DocumentService {
       throw new BadRequestException('File too large (max 50MB)');
     }
 
-    const ext = path.extname(file.originalname);
-    const storedName = `${randomUUID()}${ext}`;
+    const fileId = randomUUID();
+const ext = path.extname(file.originalname);
+const storedName = `${fileId}${ext}`;
 
-    const storageUrl = await this.uploadToCloudinary(
-      file.buffer,
-      storedName,
-    );
+const storageUrl = await this.uploadToCloudinary(
+  file.buffer,
+  fileId, // ✅ NOT storedName
+);
 
     const doc = new this.documentModel({
       customerId: createDocumentDto.customerId,

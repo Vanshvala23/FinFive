@@ -12,7 +12,8 @@ async function bootstrap() {
       'http://localhost:3000',
       'http://localhost:5173', // Vite dev server
       'http://localhost:4200', // Angular dev server
-      'https://fin-5ive.netlify.app', // e.g. https://yourapp.vercel.app
+      'https://fin-5ive.netlify.app',
+      'https://fin5ive.com', // e.g. https://yourapp.vercel.app
     ].filter(Boolean), // removes undefined if env var not set
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],

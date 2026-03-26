@@ -14,20 +14,24 @@ export class CustomerDocument {
   @Prop({ required: true, type: mongoose.Schema.Types.ObjectId, ref: 'Customer' })
   customerId!: mongoose.Types.ObjectId;
 
-  @Prop({ required: true, trim: true })
+  @Prop({ required: true })
   originalName!: string;
 
-  @Prop({ required: true, trim: true })
+  @Prop({ required: true })
   storedName!: string;
 
   @Prop({ required: true })
   mimeType!: AllowedMimeType;
 
-  @Prop({ required: true, type: Number })
-  size!: number; // in bytes
+  @Prop({ required: true })
+  size!: number;
 
-  @Prop({ required: true, trim: true })
+  @Prop({ required: true })
   storagePath!: string;
+
+  // 🔥 CRITICAL FIELD
+  @Prop({ required: true })
+  publicId!: string;
 
   @Prop({ default: false })
   isDeleted!: boolean;

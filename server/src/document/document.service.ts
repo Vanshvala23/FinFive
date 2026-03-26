@@ -38,94 +38,100 @@ export class DocumentService {
     private readonly documentModel: Model<DocumentRecord>,
   ) {}
 
-  // ✅ FIXED CLOUDINARY UPLOAD
+  // ✅ Upload to Cloudinary
   private uploadToCloudinary(
-  buffer: Buffer,
-  fileId: string,
-): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const uploadStream = cloudinary.uploader.upload_stream(
-      {
-        public_id: `documents/${fileId}`, // ✅ NO extension
-        resource_type: 'raw',
-      },
-      (error, result) => {
-        if (error || !result) return reject(error);
-        resolve(result.secure_url);
-      },
-    );
+    buffer: Buffer,
+    fileId: string,
+  ): Promise<{ publicId: string; url: string }> {
+    return new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          public_id: `documents/${fileId}`,
+          resource_type: 'raw',
+        },
+        (error, result) => {
+          if (error || !result) return reject(error);
 
-    const readable = new Readable();
-    readable.push(buffer);
-    readable.push(null);
-    readable.pipe(uploadStream);
-  });
-}
+          const publicId = result.public_id;
+
+          const url = cloudinary.url(publicId, {
+            resource_type: 'raw',
+            secure: true,
+          });
+
+          resolve({ publicId, url });
+        },
+      );
+
+      const readable = new Readable();
+      readable.push(buffer);
+      readable.push(null);
+      readable.pipe(uploadStream);
+    });
+  }
 
   async upload(
     file: Express.Multer.File,
-    createDocumentDto: CreateDocumentDto,
+    dto: CreateDocumentDto,
   ): Promise<CustomerDocument> {
     if (!ALLOWED_MIME_TYPES.includes(file.mimetype as AllowedMimeType)) {
-      throw new BadRequestException(
-        'Only PDF, DOCX, XLSX allowed',
-      );
+      throw new BadRequestException('Only PDF, DOCX, XLSX allowed');
     }
 
     if (file.size > MAX_FILE_SIZE_BYTES) {
-      throw new BadRequestException('File too large (max 50MB)');
+      throw new BadRequestException('Max file size is 50MB');
     }
 
     const fileId = randomUUID();
-const ext = path.extname(file.originalname);
-const storedName = `${fileId}${ext}`;
+    const ext = path.extname(file.originalname);
+    const storedName = `${fileId}${ext}`;
 
-const storageUrl = await this.uploadToCloudinary(
-  file.buffer,
-  fileId, // ✅ NOT storedName
-);
+    const { publicId, url } = await this.uploadToCloudinary(
+      file.buffer,
+      fileId,
+    );
 
     const doc = new this.documentModel({
-      customerId: createDocumentDto.customerId,
+      customerId: dto.customerId,
       originalName: file.originalname,
       storedName,
       mimeType: file.mimetype,
       size: file.size,
-      storagePath: storageUrl,
+      storagePath: url,
+      publicId, // 🔥 MUST SAVE
     });
 
     return doc.save();
   }
 
-  async findAll(): Promise<CustomerDocument[]> {
+  async findAll() {
     return this.documentModel
       .find({ isDeleted: false })
-      .sort({ createdAt: -1 })
-      .exec();
+      .sort({ createdAt: -1 });
   }
 
-  async findAllByCustomer(customerId: string): Promise<CustomerDocument[]> {
-    return this.documentModel
-      .find({ customerId, isDeleted: false })
-      .exec();
+  async findAllByCustomer(customerId: string) {
+    return this.documentModel.find({
+      customerId,
+      isDeleted: false,
+    });
   }
 
-  async findOne(id: string): Promise<CustomerDocument> {
-    const doc = await this.documentModel
-      .findOne({ _id: id, isDeleted: false })
-      .exec();
+  async findOne(id: string) {
+    const doc = await this.documentModel.findOne({
+      _id: id,
+      isDeleted: false,
+    });
 
     if (!doc) throw new NotFoundException('Document not found');
     return doc;
   }
 
-  async softDelete(id: string): Promise<void> {
-    const doc = await this.documentModel.findById(id).exec();
+  async softDelete(id: string) {
+    const doc = await this.documentModel.findById(id);
     if (!doc) throw new NotFoundException('Document not found');
 
-    const publicId = `documents/${doc.storedName.replace(/\.[^/.]+$/, '')}`;
-
-    await cloudinary.uploader.destroy(publicId, {
+    await cloudinary.uploader.destroy(doc.publicId, {
       resource_type: 'raw',
     });
 
@@ -133,11 +139,12 @@ const storageUrl = await this.uploadToCloudinary(
     await doc.save();
   }
 
-  // ✅ SAFE URL (always https)
-  getDownloadUrl(storagePath: string): string {
-    if (!storagePath) {
-      throw new NotFoundException('File URL missing');
-    }
-    return storagePath.replace('http://', 'https://');
+  // ✅ Always generate correct download URL
+  getDownloadUrl(publicId: string) {
+    return cloudinary.url(publicId, {
+      resource_type: 'raw',
+      secure: true,
+      flags: 'attachment',
+    });
   }
 }

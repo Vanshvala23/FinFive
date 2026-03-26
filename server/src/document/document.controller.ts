@@ -10,6 +10,7 @@ import {
   Res,
   BadRequestException,
   UseGuards,
+  NotFoundException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
@@ -44,14 +45,17 @@ export class DocumentController {
   }
 
   // 🔥 FINAL DOWNLOAD
-  @Get(':id/download')
-  async download(@Param('id') id: string, @Res() res: Response) {
-    const doc = await this.documentService.findOne(id);
+@Get(':id/download')
+async download(@Param('id') id: string, @Res() res: Response) {
+  const doc = await this.documentService.findOne(id);
 
+  try {
     const url = this.documentService.getDownloadUrl(doc.publicId);
-
     return res.redirect(url);
+  } catch (e) {
+    throw new NotFoundException('File not available (deleted or corrupted)');
   }
+}
 
   @Delete(':id')
   async delete(@Param('id') id: string) {
